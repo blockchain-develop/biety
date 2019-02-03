@@ -11,3 +11,7 @@ func (this *Ping) CmdType() string {
 func (this *Ping) Deserialization(data []byte) error {
 	return nil
 }
+
+func (this *Ping) Serialization() (data []byte,err error) {
+	return nil, nil
+}

@@ -2,6 +2,7 @@ package p2pserver
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"net"
 )
@@ -42,6 +43,25 @@ func (this *Link) Rx() {
 			Payload: msg,
 		}
 	}
+}
+
+func (this *Link) Tx(msg Message) error {
+	conn := this.conn
+	if conn == nil {
+		return errors.New("tx link invalid")
+	}
+
+	data, err := WriteMessage(msg)
+	if err != nil {
+		return err
+	}
+
+	_, err = conn.Write(data)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/biety/consensus"
+	"github.com/biety/jsonrpc"
 	"github.com/biety/ledger"
 	"github.com/biety/p2pserver"
 	"github.com/biety/txnpool"
@@ -37,7 +38,7 @@ func setupApp() *cli.App {
 
 func startBiety(ctx* cli.Context) {
 
-	fmt.Printf("init Ledger")
+	fmt.Printf("init Ledger\n")
 	ldg, err := initLedger(ctx)
 	if err != nil {
 		fmt.Print(err)
@@ -45,7 +46,7 @@ func startBiety(ctx* cli.Context) {
 	}
 	defer ldg.Close()
 
-	fmt.Printf("init TxPool")
+	fmt.Printf("init TxPool\n")
 	_, err = initTxPool(ctx)
 	if err != nil {
 		fmt.Print(err)
@@ -59,14 +60,14 @@ func startBiety(ctx* cli.Context) {
 		return
 	}
 
-	fmt.Printf("init consensus")
+	fmt.Printf("init consensus\n")
 	_, err = initConsensus(ctx)
 	if err != nil {
 		fmt.Print(err)
 		return
 	}
 
-	fmt.Printf("init rpc")
+	fmt.Printf("init rpc\n")
 	err = initRpc(ctx)
 	if err != nil {
 		fmt.Print(err)
@@ -101,6 +102,10 @@ func initConsensus(ctx *cli.Context) (*consensus.ConsensusService, error) {
 }
 
 func initRpc(ctx *cli.Context) error {
+	err := jsonrpc.StartRPCServer()
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

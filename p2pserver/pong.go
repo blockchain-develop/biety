@@ -11,3 +11,7 @@ func (this *Pong) CmdType() string {
 func (this *Pong) Deserialization(data []byte) error {
 	return nil
 }
+
+func (this *Pong) Serialization() (data []byte,err error) {
+	return nil, nil
+}

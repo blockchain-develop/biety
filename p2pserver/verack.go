@@ -12,3 +12,7 @@ func (this *VerACK) CmdType() string {
 func (this *VerACK) Deserialization(data []byte) error {
 	return nil
 }
+
+func (this *VerACK) Serialization() (data []byte,err error) {
+	return nil, nil
+}

@@ -25,3 +25,14 @@ func (this *Version) CmdType() string {
 func (this *Version) Deserialization(data []byte) error {
 	return nil
 }
+
+func (this *Version) Serialization() (data []byte,err error) {
+	return nil, nil
+}
+
+func NewVersion() Message {
+	var version Version
+	version.P.Version = 8
+
+	return &version
+}

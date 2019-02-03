@@ -3,6 +3,7 @@ package p2pserver
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/json"
 	"io"
 )
 
@@ -26,7 +27,7 @@ const (
 )
 
 type Message interface {
-	//Serialization(sink *comm.ZeroCopySink) error
+	Serialization() (data []byte,err error)
 	Deserialization(data []byte) error
 	CmdType() string
 }
@@ -44,6 +45,11 @@ type messageHeader struct {
 	CMD          [12]byte
 	Length       uint32
 	Checksum     [4]byte
+}
+
+type Msg struct {
+	msgh      messageHeader
+	payload   MsgPayload
 }
 
 
@@ -78,6 +84,37 @@ func readMessageHeader(reader io.Reader) (messageHeader, error) {
 	return msgh, err
 }
 
+
+func WriteMessage(msg Message) (data []byte, err error) {
+	data, err = msg.Serialization()
+	if err != nil {
+		return nil, err
+	}
+
+	payload := &MsgPayload {
+		PayloadSize: uint32(len(data)),
+		Payload: msg,
+	}
+
+	hdr := newMessageHeader(msg.CmdType(), uint32(len(data)))
+
+	//
+	pack := &Msg {
+		msgh: hdr,
+		payload: *payload,
+	}
+
+	return json.Marshal(pack)
+}
+
+
+func newMessageHeader(cmd string, length uint32) messageHeader {
+	msgh := messageHeader{}
+	msgh.Magic = 1
+	copy(msgh.CMD[:], cmd)
+	msgh.Length = length
+	return msgh
+}
 
 
 
