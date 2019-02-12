@@ -28,7 +28,8 @@ func (this *MessageRouter) init(syncchan chan *MsgPayload, conschan chan *MsgPay
 	this.stopSyncCh = make(chan bool)
 	this.stopConsCh = make(chan bool)
 
-	this.msgHandlers[VERACK_TYPE] = VersionHandle
+	this.msgHandlers[VERSION_TYPE] = VersionHandle
+	this.msgHandlers[VERACK_TYPE] = VersionAck
 	this.msgHandlers[PING_TYPE] = PingHandle
 	this.msgHandlers[PONG_TYPE] = PongHandle
 }

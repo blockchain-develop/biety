@@ -9,7 +9,7 @@ const (
 var DefaultConfig = &BietyConfig{
 	Genesis : &GenesisConfig{
 		SeedList: []string {
-			"127.0.0.1:6666",
+			"127.0.0.1:16666",
 		},
 	},
 }

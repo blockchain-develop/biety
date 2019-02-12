@@ -37,6 +37,8 @@ func (this *Link) Rx() {
 			break
 		}
 
+		fmt.Printf("recv msg : %v\n", msg.CmdType())
+
 		this.recvChan <- &MsgPayload {
 			Addr :  this.addr,
 			PayloadSize: payloadsize,
@@ -51,12 +53,19 @@ func (this *Link) Tx(msg Message) error {
 		return errors.New("tx link invalid")
 	}
 
-	data, err := WriteMessage(msg)
+	fmt.Printf("send msg : %v\n", msg.CmdType())
+
+	sink := NewZeroCopySink(nil)
+	err := WriteMessage(sink, msg)
 	if err != nil {
 		return err
 	}
 
-	_, err = conn.Write(data)
+	payload := sink.Bytes()
+	nByteCnt := len(payload)
+	fmt.Printf("buf length: %d\n", nByteCnt)
+
+	_, err = conn.Write(payload)
 	if err != nil {
 		return err
 	}

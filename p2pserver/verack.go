@@ -9,10 +9,10 @@ func (this *VerACK) CmdType() string {
 }
 
 //Deserialize message payload
-func (this *VerACK) Deserialization(data []byte) error {
+func (this *VerACK) Deserialization(source *ZeroCopySource) error {
 	return nil
 }
 
-func (this *VerACK) Serialization() (data []byte,err error) {
-	return nil, nil
+func (this *VerACK) Serialization(sink *ZeroCopySink) (err error) {
+	return nil
 }

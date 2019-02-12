@@ -81,6 +81,7 @@ func (this *P2PServer) StartSyncAccept(listener net.Listener) {
 		remotepeer.SyncLink.SetAddr(addr)
 		remotepeer.SyncLink.SetConn(conn)
 		remotepeer.SyncLink.SetChan(this.SyncChan)
+		fmt.Printf("%s connect to me\n", addr)
 
 		go remotepeer.SyncLink.Rx()
 	}
@@ -99,6 +100,7 @@ func (this *P2PServer) StartConsAccept(listener net.Listener) {
 		remotepeer.ConsLink.SetAddr(addr)
 		remotepeer.ConsLink.SetConn(conn)
 		remotepeer.ConsLink.SetChan(this.ConsChan)
+		fmt.Printf("%s connect to me\n", addr)
 
 		go remotepeer.ConsLink.Rx()
 	}
@@ -147,11 +149,13 @@ func (this *P2PServer) connectSeeds() {
 }
 
 func (this *P2PServer) Connect(addr string, isConsensus bool) error {
+	fmt.Printf("try to connect %s......\n", addr)
 	conn, err := net.DialTimeout("tcp", addr, time.Second*base.DIAL_TIMEOUT)
 	if err != nil {
-		fmt.Printf("connect %s failed:%s", addr, err)
+		fmt.Printf("connect %s failed:%s\n", addr, err)
 		return err
 	}
+	fmt.Printf("connect %s successful.\n", addr)
 
 	//
 	remotepeer := NewPeer()
@@ -160,10 +164,11 @@ func (this *P2PServer) Connect(addr string, isConsensus bool) error {
 	remotepeer.SyncLink.SetChan(this.SyncChan)
 	go remotepeer.SyncLink.Rx()
 
+	fmt.Printf("try version......\n")
 	version := NewVersion()
 	err = remotepeer.Send(version, isConsensus)
 	if err != nil {
-		fmt.Printf("send version error: %s", err)
+		fmt.Printf("send version error: %s\n", err)
 		return err
 	}
 

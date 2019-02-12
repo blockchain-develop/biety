@@ -3,7 +3,7 @@ package p2pserver
 import (
 	"bytes"
 	"encoding/binary"
-	"encoding/json"
+	"fmt"
 	"io"
 )
 
@@ -26,9 +26,22 @@ const (
 	DISCONNECT_TYPE  = "disconnect" //peer disconnect info raise by link
 )
 
+//msg cmd const
+const (
+	MSG_CMD_LEN      = 12               //msg type length in byte
+	CMD_OFFSET       = 4                //cmd type offet in msg hdr
+	CHECKSUM_LEN     = 4                //checksum length in byte
+	MSG_HDR_LEN      = 24               //msg hdr length in byte
+	MAX_BLK_HDR_CNT  = 500              //hdr count once when sync header
+	MAX_INV_HDR_CNT  = 500              //inventory count once when req inv
+	MAX_REQ_BLK_ONCE = 16               //req blk count once from one peer when sync blk
+	MAX_MSG_LEN      = 30 * 1024 * 1024 //the maximum message length
+	MAX_PAYLOAD_LEN  = MAX_MSG_LEN - MSG_HDR_LEN
+)
+
 type Message interface {
-	Serialization() (data []byte,err error)
-	Deserialization(data []byte) error
+	Serialization(sink *ZeroCopySink) (err error)
+	Deserialization(source *ZeroCopySource) error
 	CmdType() string
 }
 
@@ -42,16 +55,10 @@ type MsgPayload struct {
 
 type messageHeader struct {
 	Magic        uint32
-	CMD          [12]byte
+	CMD          [MSG_CMD_LEN]byte
 	Length       uint32
-	Checksum     [4]byte
+	Checksum     [CHECKSUM_LEN]byte
 }
-
-type Msg struct {
-	msgh      messageHeader
-	payload   MsgPayload
-}
-
 
 func ReadMessage(reader io.Reader) (Message, uint32, error) {
 	hdr, err := readMessageHeader(reader)
@@ -65,13 +72,20 @@ func ReadMessage(reader io.Reader) (Message, uint32, error) {
 		return nil, 0, err
 	}
 
+	checksum := Checksum(buf)
+	if checksum != hdr.Checksum {
+		return nil, 0, fmt.Errorf("message checksum mismatch\n")
+	}
+
 	cmdType := string(bytes.TrimRight(hdr.CMD[:], string(0)))
 	msg, err := MakeEmptyMessage(cmdType)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	err = msg.Deserialization(buf)
+
+	source := NewZeroCopySource(buf)
+	err = msg.Deserialization(source)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -85,33 +99,42 @@ func readMessageHeader(reader io.Reader) (messageHeader, error) {
 }
 
 
-func WriteMessage(msg Message) (data []byte, err error) {
-	data, err = msg.Serialization()
+func WriteMessage(sink* ZeroCopySink, msg Message) (err error) {
+	pstart := sink.Size()
+	sink.NextBytes(MSG_HDR_LEN)
+	err = msg.Serialization(sink)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	payload := &MsgPayload {
-		PayloadSize: uint32(len(data)),
-		Payload: msg,
-	}
+	pend := sink.Size()
+	total := pend - pstart
+	payLen := total - MSG_HDR_LEN
 
-	hdr := newMessageHeader(msg.CmdType(), uint32(len(data)))
+	sink.BackUp(total)
+	buf := sink.NextBytes(total)
+	checksum := Checksum(buf[MSG_HDR_LEN:])
+	hdr := newMessageHeader(msg.CmdType(), uint32(payLen), checksum)
 
-	//
-	pack := &Msg {
-		msgh: hdr,
-		payload: *payload,
-	}
+	sink.BackUp(total)
+	writeMessageHeaderInto(sink, hdr)
+	sink.NextBytes(payLen)
 
-	return json.Marshal(pack)
+	return nil
 }
 
+func writeMessageHeaderInto(sink *ZeroCopySink, msgh messageHeader) {
+	sink.WriteUint32(msgh.Magic)
+	sink.WriteBytes(msgh.CMD[:])
+	sink.WriteUint32(msgh.Length)
+	sink.WriteBytes(msgh.Checksum[:])
+}
 
-func newMessageHeader(cmd string, length uint32) messageHeader {
+func newMessageHeader(cmd string, length uint32, checksum [CHECKSUM_LEN]byte) messageHeader {
 	msgh := messageHeader{}
 	msgh.Magic = 1
 	copy(msgh.CMD[:], cmd)
+	msgh.Checksum = checksum
 	msgh.Length = length
 	return msgh
 }

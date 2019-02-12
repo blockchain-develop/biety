@@ -8,10 +8,10 @@ func (this *Pong) CmdType() string {
 	return PONG_TYPE
 }
 
-func (this *Pong) Deserialization(data []byte) error {
+func (this *Pong) Deserialization(source *ZeroCopySource) error {
 	return nil
 }
 
-func (this *Pong) Serialization() (data []byte,err error) {
-	return nil, nil
+func (this *Pong) Serialization(sink *ZeroCopySink) (err error) {
+	return nil
 }

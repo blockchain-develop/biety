@@ -8,10 +8,10 @@ func (this *Ping) CmdType() string {
 	return PING_TYPE
 }
 
-func (this *Ping) Deserialization(data []byte) error {
+func (this *Ping) Deserialization(source *ZeroCopySource) error {
 	return nil
 }
 
-func (this *Ping) Serialization() (data []byte,err error) {
-	return nil, nil
+func (this *Ping) Serialization(sink *ZeroCopySink) (err error) {
+	return nil
 }
