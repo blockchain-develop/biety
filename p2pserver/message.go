@@ -39,6 +39,16 @@ const (
 	MAX_PAYLOAD_LEN  = MAX_MSG_LEN - MSG_HDR_LEN
 )
 
+// The peer state
+const (
+	INIT        = 0 //initial
+	HAND        = 1 //send verion to peer
+	HAND_SHAKE  = 2 //haven`t send verion to peer and receive peer`s version
+	HAND_SHAKED = 3 //send verion to peer and receive peer`s version
+	ESTABLISH   = 4 //receive peer`s verack
+	INACTIVITY  = 5 //link broken
+)
+
 type Message interface {
 	Serialization(sink *ZeroCopySink) (err error)
 	Deserialization(source *ZeroCopySource) error

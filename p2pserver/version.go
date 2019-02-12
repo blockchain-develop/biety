@@ -71,6 +71,7 @@ func (this *Version) Serialization(sink *ZeroCopySink) (err error) {
 func NewVersion() Message {
 	var version Version
 	version.P.Version = 8
+	version.P.IsConsensus = false
 
 	return &version
 }

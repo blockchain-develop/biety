@@ -10,6 +10,7 @@ import (
 type Link struct {
 	addr           string
 	conn           net.Conn
+	port           uint16
 
 	recvChan       chan *MsgPayload
 }
@@ -71,6 +72,14 @@ func (this *Link) Tx(msg Message) error {
 	}
 
 	return nil
+}
+
+func (this *Link) SetPort(p uint16) {
+	this.port = p
+}
+
+func (this *Link) GetPort() uint16 {
+	return this.port
 }
 
 

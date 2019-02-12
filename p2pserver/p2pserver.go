@@ -1,6 +1,7 @@
 package p2pserver
 
 import (
+	"errors"
 	"fmt"
 	"github.com/biety/base"
 	"github.com/biety/config"
@@ -17,6 +18,9 @@ type P2PServer struct {
 
 	SyncChan    chan *MsgPayload
 	ConsChan    chan *MsgPayload
+
+	PeerSyncAddress map[string]*Peer
+	PeerConsAddress map[string]*Peer
 }
 
 func NewServer() *P2PServer {
@@ -24,6 +28,9 @@ func NewServer() *P2PServer {
 		SyncChan:make(chan *MsgPayload, 10000),
 		ConsChan:make(chan *MsgPayload, 10000),
 	}
+	p.PeerConsAddress = make(map[string]*Peer)
+	p.PeerSyncAddress = make(map[string]*Peer)
+
 	p.msgRouter = NewMsgRouter()
 	return p
 }
@@ -36,7 +43,7 @@ func (this *P2PServer) Start() error {
 	}
 
 	//
-	this.msgRouter.init(this.SyncChan, this.ConsChan)
+	this.msgRouter.init(this.SyncChan, this.ConsChan, this)
 	err = this.msgRouter.start()
 	if err != nil {
 		return err
@@ -81,6 +88,7 @@ func (this *P2PServer) StartSyncAccept(listener net.Listener) {
 		remotepeer.SyncLink.SetAddr(addr)
 		remotepeer.SyncLink.SetConn(conn)
 		remotepeer.SyncLink.SetChan(this.SyncChan)
+		this.AddPeerSyncAddress(addr, remotepeer)
 		fmt.Printf("%s connect to me\n", addr)
 
 		go remotepeer.SyncLink.Rx()
@@ -100,6 +108,7 @@ func (this *P2PServer) StartConsAccept(listener net.Listener) {
 		remotepeer.ConsLink.SetAddr(addr)
 		remotepeer.ConsLink.SetConn(conn)
 		remotepeer.ConsLink.SetChan(this.ConsChan)
+		this.AddPeerConsAddress(addr, remotepeer)
 		fmt.Printf("%s connect to me\n", addr)
 
 		go remotepeer.ConsLink.Rx()
@@ -155,14 +164,28 @@ func (this *P2PServer) Connect(addr string, isConsensus bool) error {
 		fmt.Printf("connect %s failed:%s\n", addr, err)
 		return err
 	}
+	addr = conn.RemoteAddr().String()
 	fmt.Printf("connect %s successful.\n", addr)
 
 	//
-	remotepeer := NewPeer()
-	remotepeer.SyncLink.SetAddr(addr)
-	remotepeer.SyncLink.SetConn(conn)
-	remotepeer.SyncLink.SetChan(this.SyncChan)
-	go remotepeer.SyncLink.Rx()
+	var remotepeer *Peer
+	if !isConsensus {
+		remotepeer = NewPeer()
+		remotepeer.SyncLink.SetAddr(addr)
+		remotepeer.SyncLink.SetConn(conn)
+		remotepeer.SyncLink.SetChan(this.SyncChan)
+		this.AddPeerSyncAddress(addr, remotepeer)
+		go remotepeer.SyncLink.Rx()
+		remotepeer.SetSyncState(HAND)
+	} else {
+		remotepeer = NewPeer()
+		remotepeer.SyncLink.SetAddr(addr)
+		remotepeer.SyncLink.SetConn(conn)
+		remotepeer.SyncLink.SetChan(this.SyncChan)
+		this.AddPeerConsAddress(addr, remotepeer)
+		go remotepeer.SyncLink.Rx()
+		remotepeer.SetConsState(HAND)
+	}
 
 	fmt.Printf("try version......\n")
 	version := NewVersion()
@@ -170,6 +193,36 @@ func (this *P2PServer) Connect(addr string, isConsensus bool) error {
 	if err != nil {
 		fmt.Printf("send version error: %s\n", err)
 		return err
+	}
+
+	return nil
+}
+
+func (this *P2PServer) Send(p *Peer, msg Message, isConsensus bool) error {
+	if p != nil {
+		return p.Send(msg, isConsensus)
+	}
+
+	return errors.New("send to a invalid peer")
+}
+
+func (this *P2PServer) AddPeerSyncAddress(addr string, p* Peer) {
+	this.PeerSyncAddress[addr] = p
+}
+
+func (this *P2PServer) AddPeerConsAddress(addr string, p *Peer) {
+	this.PeerConsAddress[addr] = p
+}
+
+func (this *P2PServer) GetPeerFromAddr(addr string) *Peer {
+	p, ok := this.PeerSyncAddress[addr]
+	if ok {
+		return p
+	}
+
+	p, ok = this.PeerConsAddress[addr]
+	if ok {
+		return p
 	}
 
 	return nil

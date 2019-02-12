@@ -16,3 +16,10 @@ func (this *VerACK) Deserialization(source *ZeroCopySource) error {
 func (this *VerACK) Serialization(sink *ZeroCopySink) (err error) {
 	return nil
 }
+
+func NewVerAck(isConsensus bool) Message {
+	var verack VerACK
+	verack.IsConsensus = isConsensus
+
+	return &verack
+}
