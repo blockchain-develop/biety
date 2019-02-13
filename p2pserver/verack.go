@@ -1,5 +1,7 @@
 package p2pserver
 
+import "github.com/biety/common"
+
 type VerACK struct {
 	IsConsensus  bool
 }
@@ -9,11 +11,11 @@ func (this *VerACK) CmdType() string {
 }
 
 //Deserialize message payload
-func (this *VerACK) Deserialization(source *ZeroCopySource) error {
+func (this *VerACK) Deserialization(source *common.ZeroCopySource) error {
 	return nil
 }
 
-func (this *VerACK) Serialization(sink *ZeroCopySink) (err error) {
+func (this *VerACK) Serialization(sink *common.ZeroCopySink) (err error) {
 	return nil
 }
 

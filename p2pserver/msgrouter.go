@@ -2,9 +2,10 @@ package p2pserver
 
 import (
 	"fmt"
+	"github.com/ontio/ontology-eventbus/actor"
 )
 
-type MessageHandler func(data* MsgPayload, p2p *P2PServer, args ...interface{})
+type MessageHandler func(data* MsgPayload, p2p *P2PServer, pid *actor.PID, args ...interface{})
 
 type MessageRouter struct {
 	msgHandlers     map[string]MessageHandler
@@ -16,6 +17,8 @@ type MessageRouter struct {
 	stopConsCh      chan bool
 
 	server          *P2PServer
+
+	pid             *actor.PID
 }
 
 func NewMsgRouter() *MessageRouter {
@@ -35,6 +38,11 @@ func (this *MessageRouter) init(syncchan chan *MsgPayload, conschan chan *MsgPay
 	this.msgHandlers[VERACK_TYPE] = VersionAck
 	this.msgHandlers[PING_TYPE] = PingHandle
 	this.msgHandlers[PONG_TYPE] = PongHandle
+	this.msgHandlers[GET_HEADERS_TYPE] = HeadersReqHandle
+	this.msgHandlers[HEADERS_TYPE] = BlkHeaderHandle
+	this.msgHandlers[GET_DATA_TYPE] = DataReqHandle
+	this.msgHandlers[BLOCK_TYPE] = BlockHandle
+	this.msgHandlers[TX_TYPE] = TransactionHandle
 }
 
 func (this *MessageRouter) start() error {
@@ -51,7 +59,7 @@ func (this *MessageRouter) hookChan(channel chan *MsgPayload, stopch chan bool) 
 				msgType := data.Payload.CmdType()
 				handler, ok := this.msgHandlers[msgType]
 				if ok {
-					go handler(data, this.server)
+					go handler(data, this.server, this.pid)
 				} else {
 					fmt.Printf("unknow message!")
 				}
@@ -60,4 +68,8 @@ func (this *MessageRouter) hookChan(channel chan *MsgPayload, stopch chan bool) 
 			return
 		}
 	}
+}
+
+func (this *MessageRouter) SetPID(pid *actor.PID) {
+	this.pid = pid
 }

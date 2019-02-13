@@ -18,6 +18,28 @@ const (
 	SYNC_BLK_WAIT         = 2     //timespan for blk sync check
 )
 
+const (
+	SYNC_MAX_HEADER_FORWARD_SIZE = 5000       //keep CurrentHeaderHeight - CurrentBlockHeight <= SYNC_MAX_HEADER_FORWARD_SIZE
+	SYNC_MAX_FLIGHT_HEADER_SIZE  = 1          //Number of headers on flight
+	SYNC_MAX_FLIGHT_BLOCK_SIZE   = 50         //Number of blocks on flight
+	SYNC_MAX_BLOCK_CACHE_SIZE    = 500        //Cache size of block wait to commit to ledger
+	SYNC_HEADER_REQUEST_TIMEOUT  = 2          //s, Request header timeout time. If header haven't receive after SYNC_HEADER_REQUEST_TIMEOUT second, retry
+	SYNC_BLOCK_REQUEST_TIMEOUT   = 2          //s, Request block timeout time. If block haven't received after SYNC_BLOCK_REQUEST_TIMEOUT second, retry
+	SYNC_NEXT_BLOCK_TIMES        = 3          //Request times of next height block
+	SYNC_NEXT_BLOCKS_HEIGHT      = 2          //for current block height plus next
+	SYNC_NODE_RECORD_SPEED_CNT   = 3          //Record speed count for accuracy
+	SYNC_NODE_RECORD_TIME_CNT    = 3          //Record request time  for accuracy
+	SYNC_NODE_SPEED_INIT         = 100 * 1024 //Init a big speed (100MB/s) for every node in first round
+	SYNC_MAX_ERROR_RESP_TIMES    = 5          //Max error headers/blocks response times, if reaches, delete it
+	SYNC_MAX_HEIGHT_OFFSET       = 5          //Offset of the max height and current height
+)
+
+// multi-sig constants
+const MULTI_SIG_MAX_PUBKEY_SIZE = 16
+
+// transaction constants
+const TX_MAX_SIG_SIZE = 16
+
 
 
 

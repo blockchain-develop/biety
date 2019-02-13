@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"github.com/biety/common"
 	"io"
 )
 
@@ -50,8 +51,8 @@ const (
 )
 
 type Message interface {
-	Serialization(sink *ZeroCopySink) (err error)
-	Deserialization(source *ZeroCopySource) error
+	Serialization(sink *common.ZeroCopySink) (err error)
+	Deserialization(source *common.ZeroCopySource) error
 	CmdType() string
 }
 
@@ -94,7 +95,7 @@ func ReadMessage(reader io.Reader) (Message, uint32, error) {
 	}
 
 
-	source := NewZeroCopySource(buf)
+	source := common.NewZeroCopySource(buf)
 	err = msg.Deserialization(source)
 	if err != nil {
 		return nil, 0, err
@@ -109,7 +110,7 @@ func readMessageHeader(reader io.Reader) (messageHeader, error) {
 }
 
 
-func WriteMessage(sink* ZeroCopySink, msg Message) (err error) {
+func WriteMessage(sink* common.ZeroCopySink, msg Message) (err error) {
 	pstart := sink.Size()
 	sink.NextBytes(MSG_HDR_LEN)
 	err = msg.Serialization(sink)
@@ -133,7 +134,7 @@ func WriteMessage(sink* ZeroCopySink, msg Message) (err error) {
 	return nil
 }
 
-func writeMessageHeaderInto(sink *ZeroCopySink, msgh messageHeader) {
+func writeMessageHeaderInto(sink *common.ZeroCopySink, msgh messageHeader) {
 	sink.WriteUint32(msgh.Magic)
 	sink.WriteBytes(msgh.CMD[:])
 	sink.WriteUint32(msgh.Length)

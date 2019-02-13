@@ -5,12 +5,15 @@ import (
 	"fmt"
 	"github.com/biety/base"
 	"github.com/biety/config"
+	"github.com/ontio/ontology-eventbus/actor"
 	"net"
 	"strconv"
 	"time"
 )
 
 type P2PServer struct {
+	pid       *actor.PID
+
 	msgRouter     *MessageRouter
 
 	synclistener  net.Listener
@@ -21,6 +24,9 @@ type P2PServer struct {
 
 	PeerSyncAddress map[string]*Peer
 	PeerConsAddress map[string]*Peer
+
+	Peerindex       int32
+	PeerList        map[int32]*Peer
 }
 
 func NewServer() *P2PServer {
@@ -30,6 +36,9 @@ func NewServer() *P2PServer {
 	}
 	p.PeerConsAddress = make(map[string]*Peer)
 	p.PeerSyncAddress = make(map[string]*Peer)
+
+	p.Peerindex = 0
+	p.PeerList = make(map[int32]*Peer)
 
 	p.msgRouter = NewMsgRouter()
 	return p
@@ -208,10 +217,16 @@ func (this *P2PServer) Send(p *Peer, msg Message, isConsensus bool) error {
 
 func (this *P2PServer) AddPeerSyncAddress(addr string, p* Peer) {
 	this.PeerSyncAddress[addr] = p
+
+	this.PeerList[this.Peerindex] = p
+	this.Peerindex ++
 }
 
 func (this *P2PServer) AddPeerConsAddress(addr string, p *Peer) {
 	this.PeerConsAddress[addr] = p
+
+	this.PeerList[this.Peerindex] = p
+	this.Peerindex ++
 }
 
 func (this *P2PServer) GetPeerFromAddr(addr string) *Peer {
@@ -226,4 +241,18 @@ func (this *P2PServer) GetPeerFromAddr(addr string) *Peer {
 	}
 
 	return nil
+}
+
+func (this *P2PServer) SetPID(pid *actor.PID) {
+	this.pid = pid
+	this.msgRouter.SetPID(pid)
+}
+
+func (this *P2PServer) GetNode(id int32) *Peer {
+	n, ok := this.PeerList[id]
+	if !ok {
+		return nil
+	}
+
+	return n
 }

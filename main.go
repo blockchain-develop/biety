@@ -2,11 +2,13 @@ package main
 
 import (
 	"fmt"
+	"github.com/biety/blocksync"
 	"github.com/biety/consensus"
 	"github.com/biety/jsonrpc"
 	"github.com/biety/ledger"
 	"github.com/biety/p2pserver"
 	"github.com/biety/txnpool"
+	"github.com/ontio/ontology-eventbus/actor"
 	"github.com/urfave/cli"
 	"os"
 	"os/signal"
@@ -53,8 +55,17 @@ func startBiety(ctx* cli.Context) {
 		return
 	}
 
+
 	fmt.Printf("start p2p networks\n")
-	_, err = initP2PNode(ctx)
+	p2pserver, _, err := initP2PNode(ctx)
+	if err != nil {
+		fmt.Print(err)
+		return
+	}
+	//p2pserver.SetTxnPoolPid(txnpoolserver.GetTxActorPID())
+
+	fmt.Printf("init block\n")
+	_, err = initBlockSync(ctx, p2pserver, ldg)
 	if err != nil {
 		fmt.Print(err)
 		return
@@ -84,16 +95,34 @@ func initLedger(ctx *cli.Context) (*ledger.Ledger, error) {
 }
 
 func initTxPool(ctx *cli.Context) (*txnpool.TxPoolServer, error) {
-	return txnpool.StartTxnPoolServer()
+	txnpoolserver, err := txnpool.StartTxnPoolServer()
+	if err != nil {
+		return nil, err
+	}
+
+	return txnpoolserver, nil
 }
 
-func initP2PNode(ctx *cli.Context) (*p2pserver.P2PServer, error) {
+func initP2PNode(ctx *cli.Context) (*p2pserver.P2PServer, *actor.PID, error) {
 	p2p := p2pserver.NewServer()
-	err := p2p.Start()
+	p2pactor := p2pserver.NewP2PActor()
+	p2pactorid, err := p2pactor.Start()
 	if err != nil {
-		return nil,fmt.Errorf("init P2P failed, err %s", err)
+		return nil, nil, fmt.Errorf("p2pActor init error %s", err)
 	}
-	return p2p, nil
+	p2p.SetPID(p2pactorid)
+	err = p2p.Start()
+	if err != nil {
+		return nil,nil, fmt.Errorf("init P2P failed, err %s", err)
+	}
+
+	return p2p, p2pactorid, nil
+}
+
+func initBlockSync(ctx *cli.Context, server *p2pserver.P2PServer, ledger *ledger.Ledger) (*blocksync.BlockSyncMgr, error) {
+	blocksync := blocksync.NewBlockSyncMgr(server, ledger)
+	go blocksync.Start()
+	return blocksync, nil
 }
 
 func initConsensus(ctx *cli.Context) (*consensus.ConsensusService, error) {

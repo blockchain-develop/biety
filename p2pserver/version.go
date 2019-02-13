@@ -2,6 +2,7 @@ package p2pserver
 
 import (
 	"errors"
+	"github.com/biety/common"
 	"io"
 )
 
@@ -27,7 +28,7 @@ func (this *Version) CmdType() string {
 	return VERSION_TYPE
 }
 
-func (this *Version) Deserialization(source *ZeroCopySource) error {
+func (this *Version) Deserialization(source *common.ZeroCopySource) error {
 	var irregular, eof bool
 	this.P.Version, eof = source.NextUint32()
 	this.P.Services, eof = source.NextUint64()
@@ -53,7 +54,7 @@ func (this *Version) Deserialization(source *ZeroCopySource) error {
 	return nil
 }
 
-func (this *Version) Serialization(sink *ZeroCopySink) (err error) {
+func (this *Version) Serialization(sink *common.ZeroCopySink) (err error) {
 	sink.WriteUint32(this.P.Version)
 	sink.WriteUint64(this.P.Services)
 	sink.WriteInt64(this.P.TimeStamp)

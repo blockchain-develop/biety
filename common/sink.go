@@ -15,13 +15,12 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with The ontology.  If not, see <http://www.gnu.org/licenses/>.
  */
-package p2pserver
+package common
 
 import (
 	"bytes"
 	"encoding/binary"
 	"errors"
-	"github.com/biety/common"
 )
 
 type ZeroCopySink struct {
@@ -141,11 +140,11 @@ func (self *ZeroCopySink) WriteString(data string) (size uint64) {
 	return self.WriteVarBytes([]byte(data))
 }
 
-func (self *ZeroCopySink) WriteAddress(addr common.Address) {
+func (self *ZeroCopySink) WriteAddress(addr Address) {
 	self.WriteBytes(addr[:])
 }
 
-func (self *ZeroCopySink) WriteHash(hash common.Uint256) {
+func (self *ZeroCopySink) WriteHash(hash Uint256) {
 	self.WriteBytes(hash[:])
 }
 

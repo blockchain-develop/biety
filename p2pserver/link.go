@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"github.com/biety/common"
 	"net"
 )
 
@@ -56,7 +57,7 @@ func (this *Link) Tx(msg Message) error {
 
 	fmt.Printf("send msg : %v\n", msg.CmdType())
 
-	sink := NewZeroCopySink(nil)
+	sink := common.NewZeroCopySink(nil)
 	err := WriteMessage(sink, msg)
 	if err != nil {
 		return err

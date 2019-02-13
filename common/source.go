@@ -16,12 +16,11 @@
  * along with The ontology.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package p2pserver
+package common
 
 import (
 	"encoding/binary"
 	"errors"
-	"github.com/biety/common"
 )
 
 var ErrIrregularData = errors.New("irregular data")
@@ -54,7 +53,7 @@ func (self *ZeroCopySource) Size() uint64 { return uint64(len(self.s)) }
 // Read implements the io.ZeroCopySource interface.
 func (self *ZeroCopySource) NextBytes(n uint64) (data []byte, eof bool) {
 	m := uint64(len(self.s))
-	end, overflow := common.SafeAdd(self.off, n)
+	end, overflow := SafeAdd(self.off, n)
 	if overflow || end > m {
 		end = m
 		eof = true
@@ -67,7 +66,7 @@ func (self *ZeroCopySource) NextBytes(n uint64) (data []byte, eof bool) {
 
 func (self *ZeroCopySource) Skip(n uint64) (eof bool) {
 	m := uint64(len(self.s))
-	end, overflow := common.SafeAdd(self.off, n)
+	end, overflow := SafeAdd(self.off, n)
 	if overflow || end > m {
 		end = m
 		eof = true
@@ -172,9 +171,9 @@ func (self *ZeroCopySource) NextVarBytes() (data []byte, size uint64, irregular 
 	return
 }
 
-func (self *ZeroCopySource) NextAddress() (data common.Address, eof bool) {
+func (self *ZeroCopySource) NextAddress() (data Address, eof bool) {
 	var buf []byte
-	buf, eof = self.NextBytes(common.ADDR_LEN)
+	buf, eof = self.NextBytes(ADDR_LEN)
 	if eof {
 		return
 	}
@@ -183,9 +182,9 @@ func (self *ZeroCopySource) NextAddress() (data common.Address, eof bool) {
 	return
 }
 
-func (self *ZeroCopySource) NextHash() (data common.Uint256, eof bool) {
+func (self *ZeroCopySource) NextHash() (data Uint256, eof bool) {
 	var buf []byte
-	buf, eof = self.NextBytes(common.UINT256_SIZE)
+	buf, eof = self.NextBytes(UINT256_SIZE)
 	if eof {
 		return
 	}
