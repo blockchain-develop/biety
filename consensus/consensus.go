@@ -1,11 +1,14 @@
 package consensus
 
+import "github.com/ontio/ontology-eventbus/actor"
 
-type ConsensusService struct {
-
+type ConsensusService interface {
+	Start() error
+	GetPID()   *actor.PID
+	Init(p2pactorpid *actor.PID, txpoolactorpid *actor.PID) error
 }
 
 func NewConsensueService() (*ConsensusService, error) {
-	s := &ConsensusService{}
-	return s, nil
+	_, err := NewVbftServer()
+	return nil, err
 }

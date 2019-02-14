@@ -43,6 +43,7 @@ func (this *MessageRouter) init(syncchan chan *MsgPayload, conschan chan *MsgPay
 	this.msgHandlers[GET_DATA_TYPE] = DataReqHandle
 	this.msgHandlers[BLOCK_TYPE] = BlockHandle
 	this.msgHandlers[TX_TYPE] = TransactionHandle
+	this.msgHandlers[CONSENSUS_TYPE] = ConsensusHandle
 }
 
 func (this *MessageRouter) start() error {

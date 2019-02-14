@@ -180,6 +180,19 @@ func TransactionHandle(data* MsgPayload, p2p *P2PServer, pid *actor.PID, args ..
 	AddTransaction(trn.Txn)
 }
 
+func ConsensusHandle(data* MsgPayload, p2p *P2PServer, pid *actor.PID, args ...interface{}) {
+	if ConsensusPid != nil {
+		consensus := data.Payload.(*Consensus)
+		err := consensus.Cons.Verify()
+		if err != nil {
+			return
+		}
+
+		consensus.Cons.PeerId = data.Id
+		ConsensusPid.Tell(&consensus.Cons)
+	}
+}
+
 
 
 

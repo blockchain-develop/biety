@@ -8,6 +8,7 @@ import (
 	"github.com/biety/ledger"
 	"github.com/biety/p2pserver"
 	"github.com/biety/txnpool"
+	"github.com/biety/validator"
 	"github.com/ontio/ontology-eventbus/actor"
 	"github.com/urfave/cli"
 	"os"
@@ -49,7 +50,7 @@ func startBiety(ctx* cli.Context) {
 	defer ldg.Close()
 
 	fmt.Printf("init TxPool\n")
-	_, err = initTxPool(ctx)
+	txnpoolserver, err := initTxPool(ctx)
 	if err != nil {
 		fmt.Print(err)
 		return
@@ -57,26 +58,32 @@ func startBiety(ctx* cli.Context) {
 
 
 	fmt.Printf("start p2p networks\n")
-	p2pserver, _, err := initP2PNode(ctx)
+	//p2p, p2pactorpid, err := initP2PNode(ctx)
+	p2p, _, err := initP2PNode(ctx)
 	if err != nil {
 		fmt.Print(err)
 		return
 	}
-	//p2pserver.SetTxnPoolPid(txnpoolserver.GetTxActorPID())
+	p2pserver.SetTxnPoolPid(txnpoolserver.GetTxActorPID())
 
 	fmt.Printf("init block\n")
-	_, err = initBlockSync(ctx, p2pserver, ldg)
+	_, err = initBlockSync(ctx, p2p, ldg)
 	if err != nil {
 		fmt.Print(err)
 		return
 	}
 
 	fmt.Printf("init consensus\n")
+	//consensus, err := initConsensus(ctx)
 	_, err = initConsensus(ctx)
 	if err != nil {
 		fmt.Print(err)
 		return
 	}
+	//p2pserver.SetConsensusPid(consensus.GetPID())
+	//consensus.Init(p2pactorpid, txnpoolserver.GetTxPoolActorPID())
+	//consensus.Start()
+
 
 	fmt.Printf("init rpc\n")
 	err = initRpc(ctx)
@@ -100,6 +107,14 @@ func initTxPool(ctx *cli.Context) (*txnpool.TxPoolServer, error) {
 		return nil, err
 	}
 
+	v1, _ := validator.NewValidator("stateless_validator")
+	v1.Register(txnpoolserver.GetVerifyRspActorPID())
+
+	v2, _ := validator.NewValidator("stateless_validator2")
+	v2.Register(txnpoolserver.GetVerifyRspActorPID())
+
+	v3, _ := validator.NewValidator("stateful_validator")
+	v3.Register(txnpoolserver.GetVerifyRspActorPID())
 	return txnpoolserver, nil
 }
 
@@ -127,7 +142,10 @@ func initBlockSync(ctx *cli.Context, server *p2pserver.P2PServer, ledger *ledger
 
 func initConsensus(ctx *cli.Context) (*consensus.ConsensusService, error) {
 	s, err := consensus.NewConsensueService()
-	return s, err
+	if err != nil {
+		return nil, err
+	}
+	return s, nil
 }
 
 func initRpc(ctx *cli.Context) error {

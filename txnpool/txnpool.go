@@ -44,3 +44,13 @@ func StartTxnPoolServer() (*TxPoolServer, error) {
 
 	return s, nil
 }
+
+func (tp *TxPool) AddTxList(txentry *TxEntry) bool {
+	txHash := txentry.Tx.Hash()
+	if _,ok := tp.txList[txHash]; ok {
+		return false
+	}
+
+	tp.txList[txHash] = txentry
+	return true
+}
