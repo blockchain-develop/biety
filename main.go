@@ -58,8 +58,8 @@ func startBiety(ctx* cli.Context) {
 
 
 	fmt.Printf("start p2p networks\n")
-	//p2p, p2pactorpid, err := initP2PNode(ctx)
-	p2p, _, err := initP2PNode(ctx)
+	p2p, p2pactorpid, err := initP2PNode(ctx)
+	//p2p, _, err := initP2PNode(ctx)
 	if err != nil {
 		fmt.Print(err)
 		return
@@ -74,15 +74,15 @@ func startBiety(ctx* cli.Context) {
 	}
 
 	fmt.Printf("init consensus\n")
-	//consensus, err := initConsensus(ctx)
-	_, err = initConsensus(ctx)
+	cons, err := initConsensus(ctx)
+	//_, err = initConsensus(ctx)
 	if err != nil {
 		fmt.Print(err)
 		return
 	}
-	//p2pserver.SetConsensusPid(consensus.GetPID())
-	//consensus.Init(p2pactorpid, txnpoolserver.GetTxPoolActorPID())
-	//consensus.Start()
+	p2pserver.SetConsensusPid(cons.GetPID())
+	cons.Init(p2pactorpid, txnpoolserver.GetTxPoolActorPID())
+	cons.Start()
 
 
 	fmt.Printf("init rpc\n")
@@ -140,7 +140,7 @@ func initBlockSync(ctx *cli.Context, server *p2pserver.P2PServer, ledger *ledger
 	return blocksync, nil
 }
 
-func initConsensus(ctx *cli.Context) (*consensus.ConsensusService, error) {
+func initConsensus(ctx *cli.Context) (consensus.ConsensusService, error) {
 	s, err := consensus.NewConsensueService()
 	if err != nil {
 		return nil, err

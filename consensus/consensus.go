@@ -8,7 +8,7 @@ type ConsensusService interface {
 	Init(p2pactorpid *actor.PID, txpoolactorpid *actor.PID) error
 }
 
-func NewConsensueService() (*ConsensusService, error) {
-	_, err := NewVbftServer()
-	return nil, err
+func NewConsensueService() (ConsensusService, error) {
+	server, err := NewVbftServer()
+	return server, err
 }
